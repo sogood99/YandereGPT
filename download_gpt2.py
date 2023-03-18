@@ -48,6 +48,8 @@ def main():
     tokenizer = GPT2Tokenizer.from_pretrained(options.model_dir)
     model = GPT2LMHeadModel.from_pretrained(options.model_dir)
 
+    print("Model Params: {}".format(sum(p.numel() for p in model.parameters() if p.requires_grad)))
+
     if type(model) is not GPT2LMHeadModel:
         return
 
@@ -63,7 +65,7 @@ def main():
         max_length=50,
         top_k=50,
         top_p=0.95,
-        num_return_sequences=1,
+        num_return_sequences=3,
         pad_token_id=tokenizer.eos_token_id
     )
 
