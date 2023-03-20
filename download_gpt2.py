@@ -10,8 +10,10 @@ def get_argparse():
     p.add('-c', '--my-config', is_config_file=True, help='config file path')
     p.add('--model_name', type=str, default="gpt2", help='model name')
     p.add('--model_dir', type=pathlib.Path,
-          default="./models/gpt2/", help='path to genome file')
+          default="./models/gpt2/", help='path to model')
     p.add('-v', help='verbose', action='store_true')
+    p.add('--test_phrase', type=str, default="Replace me by any text you'd like. Or not",
+          help="test phrase for inference")
     # this option can be set in a config file because it starts with '--'
 
     options = p.parse_args()
@@ -48,7 +50,8 @@ def main():
     tokenizer = GPT2Tokenizer.from_pretrained(options.model_dir)
     model = GPT2LMHeadModel.from_pretrained(options.model_dir)
 
-    print("Model Params: {}".format(sum(p.numel() for p in model.parameters() if p.requires_grad)))
+    print("Model Params: {}".format(sum(p.numel()
+          for p in model.parameters() if p.requires_grad)))
 
     if type(model) is not GPT2LMHeadModel:
         return
@@ -56,7 +59,7 @@ def main():
     # test it out
     start_time = time.time()
 
-    text = "Replace me by any text you'd like. Or not"
+    text = options.test_phrase
     print("\nInference: {}\n".format(text) + 100*'-')
     encoded_input = tokenizer(text, return_tensors='pt')
     sample_outputs = model.generate(
@@ -77,6 +80,7 @@ def main():
             sample_output, skip_special_tokens=True)))
 
     print("Time Used: {:.3f}s".format(time_used))
+    print(tokenizer.eos_token_id)
 
 
 if __name__ == "__main__":
