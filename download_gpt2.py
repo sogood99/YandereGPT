@@ -7,7 +7,7 @@ from transformers import GPT2Tokenizer, GPT2LMHeadModel, set_seed
 
 def get_argparse():
     p = configargparse.ArgParser(default_config_files=['./.my.config'])
-    p.add('-c', '--my-config', is_config_file=True, help='config file path')
+    p.add('-c', '--config', is_config_file=True, help='config file path')
     p.add('--model_name', type=str, default="gpt2", help='model name')
     p.add('--model_dir', type=pathlib.Path,
           default="./models/gpt2/", help='path to model')

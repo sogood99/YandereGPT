@@ -11,11 +11,11 @@ from datasets import load_dataset
 
 def get_argparse():
     p = configargparse.ArgParser(default_config_files=['./.my.config'])
-    p.add('-c', '--my-config', is_config_file=True, help='config file path')
+    p.add('-c', '--config', is_config_file=True, help='config file path')
     p.add('--anime', type=str, default="School Days", help='anime name')
     p.add('--link', type=str,
           default="https://kitsunekko.net/subtitles/School%20Days/[AniYoshi]_School_Days.zip", help='link to subtitle file')
-    p.add('--names', type=list,
+    p.add('--names', type=list, action="append",
           default=["Kotonoha", "Sekai"], help='link to anime characters')
     p.add('--data_dir', type=Path,
           default="./data/", help='path to data')
