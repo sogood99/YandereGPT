@@ -27,6 +27,31 @@ def get_argparse():
     return options
 
 
+def eval(model, tokenizer, text):
+    start_time = time.time()
+
+    print("\nInference: {}\n".format(text) + 100*'-')
+    encoded_input = tokenizer(text, return_tensors='pt')
+    sample_outputs = model.generate(
+        **encoded_input,
+        do_sample=True,
+        max_length=50,
+        top_k=50,
+        top_p=0.95,
+        num_return_sequences=3,
+        pad_token_id=tokenizer.eos_token_id
+    )
+
+    time_used = time.time() - start_time
+
+    print("Output:\n" + 100 * '-')
+    for i, sample_output in enumerate(sample_outputs):
+        print("{}: {}".format(i, tokenizer.decode(
+            sample_output, skip_special_tokens=True)))
+
+    print("Time Used: {:.3f}s".format(time_used))
+
+
 def main():
     set_seed(42)
 
@@ -58,30 +83,7 @@ def main():
         return
 
     # test it out
-    start_time = time.time()
-
-    text = options.test_phrase
-    print("\nInference: {}\n".format(text) + 100*'-')
-    encoded_input = tokenizer(text, return_tensors='pt')
-    sample_outputs = model.generate(
-        **encoded_input,
-        do_sample=True,
-        max_length=50,
-        top_k=50,
-        top_p=0.95,
-        num_return_sequences=3,
-        pad_token_id=tokenizer.eos_token_id
-    )
-
-    time_used = time.time() - start_time
-
-    print("Output:\n" + 100 * '-')
-    for i, sample_output in enumerate(sample_outputs):
-        print("{}: {}".format(i, tokenizer.decode(
-            sample_output, skip_special_tokens=True)))
-
-    print("Time Used: {:.3f}s".format(time_used))
-    print(tokenizer.eos_token_id)
+    eval(model, tokenizer, options.test_phrase)
 
 
 if __name__ == "__main__":

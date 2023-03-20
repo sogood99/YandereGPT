@@ -15,8 +15,8 @@ def get_argparse():
     p.add('--anime', type=str, default="School Days", help='anime name')
     p.add('--link', type=str,
           default="https://kitsunekko.net/subtitles/School%20Days/[AniYoshi]_School_Days.zip", help='link to subtitle file')
-    p.add('--names', type=list, action="append",
-          default=["Kotonoha", "Sekai"], help='link to anime characters')
+    p.add('--names', type=lambda s: [item.strip() for item in s.split(',')],
+          default=["Kotonoha", "Sekai"], help='anime character names')
     p.add('--data_dir', type=Path,
           default="./data/", help='path to data')
     p.add('-v', help='verbose', action='store_true')
@@ -79,7 +79,8 @@ def main():
 
         f.write(test_data)
 
-    print("Finished writing train test data")
+    print("Finished writing train test data, train {}, test {}".format(
+        len(train), len(test)))
 
 
 if __name__ == "__main__":

@@ -2,4 +2,5 @@ venv
 *.swp
 models
 data
+logs
 __pycache__
