@@ -2,3 +2,4 @@ venv
 *.swp
 models
 data
+__pycache__

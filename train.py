@@ -1,8 +1,9 @@
-import os
 import configargparse
 import time
+from download_data import get_dataset
 from pathlib import Path
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, set_seed
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, set_seed, Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from torch.optim import AdamW
 
 
 def get_argparse():
@@ -32,32 +33,44 @@ def main():
 
     options = get_argparse()
     model_dir = Path(options.model_dir, options.model_name)
-
-    if not os.path.exists(model_dir) or not os.listdir(model_dir):
-        # empty
-        print("Directory is empty")
-        tokenizer = GPT2Tokenizer.from_pretrained(options.model_name)
-        model = GPT2LMHeadModel.from_pretrained(options.model_name)
-
-        if type(model) is not GPT2LMHeadModel:
-            return
-
-        os.makedirs(model_dir, exist_ok=True)
-        tokenizer.save_pretrained(model_dir)
-        model.save_pretrained(model_dir)
-    else:
-        print("Directory is not empty, testing")
+    output_dir = Path(options.model_dir, options.model_name + "_fined_tuned")
 
     tokenizer = GPT2Tokenizer.from_pretrained(model_dir)
+    tokenizer.pad_token_id = tokenizer.eos_token_id
     model = GPT2LMHeadModel.from_pretrained(model_dir)
+    optimizer = AdamW(model.parameters(), lr=5e-5)
 
-    print("Model Params: {}".format(sum(p.numel()
-          for p in model.parameters() if p.requires_grad)))
+    dataset = get_dataset()
 
-    if type(model) is not GPT2LMHeadModel:
-        return
+    def tokenize_function(examples):
+        return tokenizer(examples["text"])
+    tokenized_dataset = dataset.map(tokenize_function, batched=True)
 
-    # test it out
+    training_args = TrainingArguments(output_dir=str(output_dir),
+                                      overwrite_output_dir=True,
+                                      num_train_epochs=10,
+                                      per_device_train_batch_size=32,
+                                      per_device_eval_batch_size=64,
+                                      eval_steps=400,
+                                      save_steps=800,
+                                      warmup_steps=500,
+                                      evaluation_strategy="epoch")
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer, mlm=False)
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_dataset["train"],
+        eval_dataset=tokenized_dataset["test"],
+        data_collator=data_collator,
+        optimizers=(optimizer, None)
+    )
+
+    trainer.train()
+    trainer.save_model()
+    tokenizer.save_pretrained(output_dir)
+
     start_time = time.time()
 
     text = options.test_phrase
